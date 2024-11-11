@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memory Lane</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --surface-1: #ffffff;
+      --surface-2: #f8fafc;
+      --surface-3: #f1f5f9;
+      --text-1: #0f172a;
+      --text-2: #475569;
+      --primary: #3b82f6;
+      --primary-dark: #2563eb;
+      --success: #10b981;
+      --radius-1: 12px;
+      --radius-2: 20px;
+      --shadow-1: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      --shadow-2: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--surface-2);
+      color: var(--text-1);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .header {
+      width: 100%;
+      background: var(--surface-1);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 1.5rem;
+      transform: translateY(0);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: var(--shadow-1);
+    }
+
+    .header.hide {
+      transform: translateY(-100%);
+    }
+
+    #search-bar {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .input-wrapper {
+      flex: 1;
+      position: relative;
+    }
+
+    .input-wrapper i {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-2);
+    }
+
+    #search-date {
+      width: 100%;
+      padding: 1rem 1rem 1rem 2.5rem;
+      font-size: 1rem;
+      border: 2px solid var(--surface-3);
+      border-radius: var(--radius-1);
+      background: var(--surface-1);
+      color: var(--text-1);
+      transition: all 0.2s ease;
+    }
+
+    #search-date:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgb(59 130 246 / 0.1);
+    }
+
+    button {
+      padding: 1rem 1.5rem;
+      font-size: 1rem;
+      font-weight: 500;
+      color: white;
+      background: var(--primary);
+      border: none;
+      border-radius: var(--radius-1);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    button:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .timeline {
+      width: 100%;
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+
+    .memory {
+      padding: 2rem;
+      margin-bottom: 1.5rem;
+      background: var(--surface-1);
+      border-radius: var(--radius-2);
+      box-shadow: var(--shadow-1);
+      transform: translateY(0);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      opacity: 0;
+      animation: slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+
+    .memory:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-2);
+    }
+
+    .memory-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+
+    .memory-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--text-1);
+      margin-bottom: 0.5rem;
+    }
+
+    .memory-date {
+      font-size: 0.875rem;
+      color: var(--text-2);
+      background: var(--surface-3);
+      padding: 0.5rem 1rem;
+      border-radius: 9999px;
+    }
+
+    .memory-content {
+      font-size: 1rem;
+      line-height: 1.6;
+      color: var(--text-2);
+    }
+
+    #add-memory-btn {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      width: 60px;
+      height: 60px;
+      border-radius: 30px;
+      background: var(--primary);
+      color: white;
+      font-size: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: var(--shadow-2);
+    }
+
+    #add-memory-btn:hover {
+      transform: scale(1.1);
+      background: var(--primary-dark);
+    }
+
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgb(0 0 0 / 0.4);
+      backdrop-filter: blur(8px);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .modal.active {
+      opacity: 1;
+    }
+
+    .modal-content {
+      width: 90%;
+      max-width: 600px;
+      background: var(--surface-1);
+      padding: 2rem;
+      border-radius: var(--radius-2);
+      position: relative;
+      transform: scale(0.95);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .modal.active .modal-content {
+      transform: scale(1);
+      opacity: 1;
+    }
+
+    .modal input,
+    .modal textarea {
+      width: 100%;
+      padding: 1rem;
+      margin: 0.5rem 0 1rem;
+      border: 2px solid var(--surface-3);
+      border-radius: var(--radius-1);
+      font-size: 1rem;
+      transition: all 0.2s ease;
+    }
+
+    .modal input:focus,
+    .modal textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgb(59 130 246 / 0.1);
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 1.5rem;
+      right: 1.5rem;
+      width: 32px;
+      height: 32px;
+      border-radius: 16px;
+      background: var(--surface-3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .close-btn:hover {
+      background: var(--surface-2);
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .success-indicator {
+      position: fixed;
+      top: 2rem;
+      right: 2rem;
+      padding: 1rem 1.5rem;
+      background: var(--success);
+      color: white;
+      border-radius: var(--radius-1);
+      transform: translateX(200%);
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .success-indicator.show {
+      transform: translateX(0);
+    }
+
+    @media (max-width: 768px) {
+      .header {
+        padding: 1rem;
+      }
+      
+      #search-bar {
+        flex-direction: column;
+      }
+      
+      button {
+        width: 100%;
+        justify-content: center;
+      }
+      
+      .memory {
+        padding: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div id="search-bar">
+      <div class="input-wrapper">
+        <i class="fas fa-calendar"></i>
+        <input type="date" id="search-date" placeholder="Filter by date">
+      </div>
+      <button id="search-btn">
+        <i class="fas fa-filter"></i>
+        <span>Filter Memories</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="timeline">
+    <div id="memory-lane"></div>
+  </div>
+
+  <button id="add-memory-btn">
+    <i class="fas fa-plus"></i>
+  </button>
+
+  <div id="memory-modal" class="modal">
+    <div class="modal-content">
+      <div class="close-btn">
+        <i class="fas fa-times"></i>
+      </div>
+      <h2>Create New Memory</h2>
+      <label for="memory-title">Title</label>
+      <input type="text" id="memory-title" placeholder="Give your memory a title" required>
+      <label for="memory-date">Date</label>
+      <input type="date" id="memory-date" required>
+      <label for="memory-content">Description</label>
+      <textarea id="memory-content" placeholder="What's this memory about?" rows="5" required></textarea>
+      <button id="save-memory-btn">
+        <i class="fas fa-save"></i>
+        <span>Save Memory</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="success-indicator">Memory saved successfully!</div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.0/firebase-app.js";
+    import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/9.6.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBJBsKxwbnAIB7FBGrmCOdnUnOYE8judfU",
+      authDomain: "laneofus.firebaseapp.com",
+      projectId: "laneofus",
+      storageBucket: "laneofus.firebasestorage.app",
+      messagingSenderId: "449620383728",
+      appId: "1:449620383728:android:f52f36397f2c1d4b82ef35",
+      databaseURL: "https://laneofus-default-rtdb.firebaseio.com"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const header = document.querySelector('.header');
+    const memoryLane = document.getElementById("memory-lane");
+    const addMemoryBtn = document.getElementById("add-memory-btn");
+    const memoryModal = document.getElementById("memory-modal");
+    const closeModalBtn = document.querySelector(".close-btn");
+    const saveMemoryBtn = document.getElementById("save-memory-btn");
+    const searchDateInput = document.getElementById("search-date");
+    const searchBtn = document.getElementById("search-btn");
+    const successIndicator = document.querySelector(".success-indicator");
+
+    let lastScrollPosition = window.pageYOffset;
+
+    // Handle header hide/show on scroll
+    window.addEventListener('scroll', () => {
+      const currentScrollPosition = window.pageYOffset;
+      if (currentScrollPosition > lastScrollPosition) {
+        header.classList.add('hide');
+      } else {
+        header.classList.remove('hide');
+      }
+      lastScrollPosition = currentScrollPosition;
+    });
+
+    function showSuccessMessage() {
+      successIndicator.classList.add('show');
+      setTimeout(() => {
+        successIndicator.classList.remove('show');
+      }, 3000);
+    }
+
+    function openModal() {
+      memoryModal.style.display = "flex";
+      requestAnimationFrame(() => {
+        memoryModal.classList.add("active");
+      });
+    }
+
+    function closeModal() {
+      memoryModal.classList.remove("active");
+      setTimeout(() => {
+        memoryModal.style.display = "none";
+      }, 300);
+    }
+
+    addMemoryBtn.addEventListener("click", openModal);
+    closeModalBtn.addEventListener("click", closeModal);
+    memoryModal.addEventListener("click", (event) => {
+      if (event.target === memoryModal) {
+        closeModal();
+      }
+    });
+
+    saveMemoryBtn.addEventListener("click", () => {
+      const title = document.getElementById("memory-title").value;
+      const date = document.getElementById("memory-date").value;
+      const content = document.getElementById("memory-content").value;
+
+      if (title && date && content) {
+        const memoryRef = ref(db, "memories");
+        push(memoryRef, {
+          title,
+          date,
+          content,
+          timestamp: Date.now()
+        }).then(() => {
+          closeModal();
+          document.getElementById("memory-title").value = '';
+          document.getElementById("memory-date").value = '';
+          document.getElementById("memory-content").value = '';
+          showSuccessMessage();
+        });
+      }
+    });
+
+    function displayMemories(filterDate = null) {
+      const memoryRef = ref(db, "memories");
+      onValue(memoryRef, (snapshot) => {
+        memoryLane.innerHTML = '';
+        const memories = [];
+        
+        snapshot.forEach((childSnapshot) => {
+          memories.push({
+            ...childSnapshot.val(),
+            key: childSnapshot.key
+          });
+        });
+
+        memories
+          .sort((a, b) => new Date(b.date) - new Date(a.date))
+          .forEach((memory, index) => {
+            if (!filterDate || memory.date === filterDate) {
+              const memoryDiv = document.createElement("div");
+              memoryDiv.classList.add("memory");
+              memoryDiv.style.animationDelay = `${index * 0.1}s`;
+              memoryDiv.innerHTML = `
+                <h3>${memory.title}</h3>
+                <small>${new Date(memory.date).toLocaleDateString('en-US', {
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}</small>
+                <p>${memory.content}</p>
+              `;
+              memoryLane.appendChild(memoryDiv);
+            }
+          });
+      });
+    }
+
+    searchBtn.addEventListener("click", () => {
+      const selectedDate = searchDateInput.value;
+      displayMemories(selectedDate);
+    });
+
+    displayMemories();
+  </script>
+</body>
+</html>
